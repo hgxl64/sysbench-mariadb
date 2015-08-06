@@ -34,6 +34,9 @@
 #ifdef HAVE_PTHREAD_H
 # include <pthread.h>
 #endif
+#ifdef HAVE_STDINT_H
+# include <stdint.h>
+#endif
 
 #include "sb_list.h"
 #include "sb_options.h"
@@ -67,6 +70,11 @@
 # define sb_rnd_double() drand48()
 #else
 # define sb_rnd_double() (((double) sb_rnd()) / SB_MAX_RND)
+#endif
+
+/* bypass local RNG is TLS is unavailable */
+#ifndef TLS
+# define sb_rnd_local() sb_rnd()
 #endif
 
 /* Sysbench commands */

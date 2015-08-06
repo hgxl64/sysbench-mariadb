@@ -168,6 +168,9 @@ AC_CHECK_DECLS(O_SYNC, ,
 # Checks for programs.
 AX_CHECK_DOCBOOK
 
+# Check for TLS support
+AX_TLS
+
 # Checks for libraries.
 
 ACX_PTHREAD

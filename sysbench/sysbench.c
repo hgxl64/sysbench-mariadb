@@ -203,6 +203,20 @@ static void sigalrm_handler(int sig)
 }
 #endif
 
+
+#ifdef TLS
+static uint32_t sb_rnd_local(void)
+{
+    static TLS uint32_t seed;
+    if (seed == 0) {
+        seed= sb_rnd();
+    } else {
+        seed= 1664525*seed + 1013904223;
+    }
+    return (seed % SB_MAX_RND);
+}
+#endif
+
 /* Main request provider function */ 
 
 
@@ -577,7 +591,7 @@ static void *eventgen_thread_proc(void *arg)
 
   curr_ns = sb_timer_value(&sb_globals.exec_timer);
   /* emulate exponential distribution with Lambda = tx_rate */
-  intr_ns = (long) (log(1 - (double) sb_rnd() / (double) SB_MAX_RND) /
+  intr_ns = (long) (log(1 - (double) sb_rnd_local() / (double) SB_MAX_RND) /
                     (-(double) sb_globals.tx_rate)*1000000);
   next_ns = curr_ns + intr_ns*1000;
 
@@ -588,7 +602,7 @@ static void *eventgen_thread_proc(void *arg)
     curr_ns = sb_timer_value(&sb_globals.exec_timer);
 
     /* emulate exponential distribution with Lambda = tx_rate */
-    intr_ns = (long) (log(1 - (double)sb_rnd() / (double)SB_MAX_RND) /
+    intr_ns = (long) (log(1 - (double)sb_rnd_local() / (double)SB_MAX_RND) /
                       (-(double)sb_globals.tx_rate)*1000000);
 
     next_ns = next_ns + intr_ns*1000;
@@ -1240,7 +1254,7 @@ int sb_rand(int a, int b)
 
 int sb_rand_uniform(int a, int b)
 {
-  return a + sb_rnd() % (b - a + 1);
+  return a + sb_rnd_local() % (b - a + 1);
 }
 
 /* gaussian distribution */
@@ -1252,7 +1266,7 @@ int sb_rand_gaussian(int a, int b)
 
   t = b - a + 1;
   for(i=0, sum=0; i < rand_iter; i++)
-    sum += sb_rnd() % t;
+    sum += sb_rnd_local() % t;
   
   return a + sum / rand_iter;
 }
@@ -1277,13 +1291,13 @@ int sb_rand_special(int a, int b)
   range_size = t * (100 / (100 - rand_res));
   
   /* Generate uniformly distributed one at this stage  */
-  res = sb_rnd() % range_size;
+  res = sb_rnd_local() % range_size;
   
   /* For first part use gaussian distribution */
   if (res < t)
   {
     for(i = 0; i < rand_iter; i++)
-      sum += sb_rnd() % t;
+      sum += sb_rnd_local() % t;
     return a + sum / rand_iter;  
   }
 
