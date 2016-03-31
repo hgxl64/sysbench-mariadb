@@ -1,4 +1,5 @@
 /* Copyright (C) 2004 MySQL AB
+   Copyright (C) 2004-2015 Alexey Kopytov <akopytov@gmail.com>
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -12,7 +13,7 @@
 
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 */
 
 #ifdef HAVE_CONFIG_H
@@ -38,7 +39,7 @@ static sb_arg_t cpu_args[] =
 /* CPU test operations */
 static int cpu_init(void);
 static void cpu_print_mode(void);
-static sb_request_t cpu_get_request(void);
+static sb_request_t cpu_get_request(int thread_id);
 static int cpu_execute_request(sb_request_t *, int);
 static int cpu_done(void);
 
@@ -97,10 +98,12 @@ int cpu_init(void)
 }
 
 
-sb_request_t cpu_get_request(void)
+sb_request_t cpu_get_request(int thread_id)
 {
   sb_request_t req;
-  
+
+  (void) thread_id; /* unused */
+
   if (sb_globals.max_requests > 0 && req_performed >= sb_globals.max_requests)
   {
     req.type = SB_REQ_TYPE_NULL;
@@ -150,7 +153,7 @@ int cpu_execute_request(sb_request_t *r, int thread_id)
 void cpu_print_mode(void)
 {
   log_text(LOG_INFO, "Doing CPU performance benchmark\n");  
-  log_text(LOG_NOTICE, "Primer numbers limit: %d\n", max_prime);
+  log_text(LOG_NOTICE, "Prime numbers limit: %d\n", max_prime);
 }
 
 int cpu_done(void)

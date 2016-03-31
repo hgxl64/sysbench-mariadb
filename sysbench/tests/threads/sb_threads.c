@@ -1,4 +1,5 @@
 /* Copyright (C) 2004 MySQL AB
+   Copyright (C) 2004-2015 Alexey Kopytov <akopytov@gmail.com>
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -12,7 +13,7 @@
 
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 */
 
 #ifdef HAVE_CONFIG_H
@@ -53,7 +54,7 @@ static sb_arg_t threads_args[] =
 static int threads_init(void);
 static int threads_prepare(void);
 static void threads_print_mode(void);
-static sb_request_t threads_get_request(void);
+static sb_request_t threads_get_request(int);
 static int threads_execute_request(sb_request_t *, int);
 static int threads_cleanup(void);
 
@@ -138,10 +139,12 @@ int threads_cleanup(void)
 }
 
 
-sb_request_t threads_get_request(void)
+sb_request_t threads_get_request(int thread_id)
 {
   sb_request_t         sb_req;
   sb_threads_request_t *threads_req = &sb_req.u.threads_request;
+
+  (void) thread_id; /* unused */
 
   SB_THREAD_MUTEX_LOCK();
   if (sb_globals.max_requests > 0 && req_performed >= sb_globals.max_requests)

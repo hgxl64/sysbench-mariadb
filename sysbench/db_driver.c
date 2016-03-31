@@ -1,4 +1,6 @@
-/* Copyright (C) 2004 MySQL AB
+/*
+   Copyright (C) 2004 MySQL AB
+   Copyright (C) 2004-2015 Alexey Kopytov <akopytov@gmail.com>
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -12,7 +14,7 @@
 
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 */
 
 #ifdef HAVE_CONFIG_H
@@ -314,7 +316,7 @@ int db_disconnect(db_conn_t *con)
   rc = drv->ops.disconnect(con);
   free(con);
 
-  return 0;
+  return rc;
 }
 
 
@@ -851,7 +853,7 @@ void db_print_stats(sb_stat_t type)
                   "threads: %d, tps: %4.2f, reads: %4.2f, writes: %4.2f, "
                   "response time: %4.2fms (%u%%), errors: %4.2f, "
                   "reconnects: %5.2f",
-                  sb_globals.num_threads,
+                  sb_globals.num_running,
                   (transactions - last_transactions) / seconds,
                   (read_ops - last_read_ops) / seconds,
                   (write_ops - last_write_ops) / seconds,

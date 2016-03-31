@@ -1,4 +1,5 @@
 /* Copyright (C) 2004 MySQL AB
+   Copyright (C) 2004-2008 Alexey Kopytov <akopytov@gmail.com>
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -12,7 +13,7 @@
 
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 */
 
 #ifdef HAVE_CONFIG_H
@@ -50,7 +51,7 @@ static sb_arg_t mutex_args[] =
 /* Mutex test operations */
 static int mutex_init(void);
 static void mutex_print_mode(void);
-static sb_request_t mutex_get_request(void);
+static sb_request_t mutex_get_request(int);
 static int mutex_execute_request(sb_request_t *, int);
 static int mutex_done(void);
 
@@ -129,11 +130,13 @@ int mutex_done(void)
 }
 
 
-sb_request_t mutex_get_request(void)
+sb_request_t mutex_get_request(int thread_id)
 {
   sb_request_t         sb_req;
   sb_mutex_request_t   *mutex_req = &sb_req.u.mutex_request;
-  
+
+  (void) thread_id; /* unused */
+
   sb_req.type = SB_REQ_TYPE_MUTEX;
   mutex_req->nlocks = mutex_locks;
   mutex_req->nloops = mutex_loops;

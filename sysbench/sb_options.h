@@ -1,4 +1,5 @@
 /* Copyright (C) 2004 MySQL AB
+   Copyright (C) 2004-2015 Alexey Kopytov <akopytov@gmail.com>
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -12,7 +13,7 @@
 
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 */
 
 #ifndef OPTIONS_H
@@ -32,7 +33,8 @@ typedef enum
   SB_ARG_TYPE_SIZE,
   SB_ARG_TYPE_FLOAT,
   SB_ARG_TYPE_STRING,
-  SB_ARG_TYPE_LIST
+  SB_ARG_TYPE_LIST,
+  SB_ARG_TYPE_FILE
 } sb_arg_type_t;
 
 /* Test option definition */
@@ -72,7 +74,7 @@ int sb_register_arg_set(sb_arg_t *set);
 int set_option(const char *name, const char *value, sb_arg_type_t type);
 
 /* Find option specified by 'name' */
-option_t *sb_find_option(char *name);
+option_t *sb_find_option(const char *name);
 
 /* Print list of options specified by 'opts' */
 void sb_print_options(sb_arg_t *opts);

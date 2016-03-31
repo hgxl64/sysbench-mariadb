@@ -1,4 +1,5 @@
 /* Copyright (C) 2004 MySQL AB
+   Copyright (C) 2004-2015 Alexey Kopytov <akopytov@gmail.com>
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -12,7 +13,7 @@
 
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 */
 
 #ifdef HAVE_CONFIG_H
@@ -141,11 +142,13 @@ int log_register(void)
 /* Display command line options for registered log handlers */
 
 
-void log_usage(void)
+void log_print_help(void)
 {
   unsigned int    i;
   sb_list_item_t  *pos;
   log_handler_t   *handler;
+
+  printf("Log options:\n");
 
   for (i = 0; i < LOG_MSG_TYPE_MAX; i++)
   {

@@ -1,4 +1,5 @@
 /* Copyright (C) 2004 MySQL AB
+   Copyright (C) 2004-2015 Alexey Kopytov <akopytov@gmail.com>
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -12,7 +13,7 @@
 
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 */
 
 #ifdef STDC_HEADERS
@@ -694,10 +695,10 @@ static int check_error(db_conn_t *sb_con, const char *func, const char *query)
   }
 
   if (query)
-    log_text(LOG_ALERT, "%s for query '%s' failed: %u %s",
-             func, query, error, mysql_error(con));
+    log_text(LOG_ALERT, "%s returned error %u (%s) for query '%s'",
+             func, error, mysql_error(con), query);
   else
-    log_text(LOG_ALERT, "%s failed: %u %s",
+    log_text(LOG_ALERT, "%s returned error %u (%s)",
              func, error, mysql_error(con));
 
   return SB_DB_ERROR_FAILED;

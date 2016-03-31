@@ -1,4 +1,5 @@
 /* Copyright (C) 2006 MySQL AB
+   Copyright (C) 2006-2015 Alexey Kopytov <akopytov@gmail.com>
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -12,7 +13,7 @@
 
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 */
 
 #ifdef HAVE_CONFIG_H
@@ -39,7 +40,7 @@
 #define CALL_ERROR(L, name)           \
   do { \
     const char *err = lua_tostring(L, -1); \
-    log_text(LOG_DEBUG, "failed to execute function `%s': %s",   \
+    log_text(LOG_FATAL, "failed to execute function `%s': %s",   \
              name, err ? err : "(null)");                               \
   } while (0)
 
@@ -90,7 +91,7 @@ static unsigned int nevents;
 
 static int sb_lua_init(void);
 static int sb_lua_done(void);
-static sb_request_t sb_lua_get_request(void);
+static sb_request_t sb_lua_get_request(int thread_id);
 static int sb_lua_op_execute_request(sb_request_t *, int);
 static int sb_lua_op_thread_init(int);
 static int sb_lua_op_thread_done(int);
@@ -234,9 +235,11 @@ int sb_lua_init(void)
   return 0;
 }
 
-sb_request_t sb_lua_get_request(void)
+sb_request_t sb_lua_get_request(int thread_id)
 {
   sb_request_t req;
+
+  (void) thread_id; /* unused */
 
   if (sb_globals.max_requests != 0 && nevents >= sb_globals.max_requests)
   {
@@ -295,7 +298,8 @@ int sb_lua_op_execute_request(sb_request_t *sb_req, int thread_id)
       
   LOG_EVENT_STOP(msg, thread_id);
 
-  sb_percentile_update(&local_percentile, sb_timer_value(&timers[thread_id]));
+  if (db_driver != NULL)
+    sb_percentile_update(&local_percentile, sb_timer_value(&timers[thread_id]));
 
   return 0;
 }
@@ -394,6 +398,9 @@ lua_State *sb_lua_new_state(const char *scriptname, int thread_id)
       case SB_ARG_TYPE_LIST:
         /*FIXME: should be exported as tables */
         lua_pushnil(state);
+        break;
+      case SB_ARG_TYPE_FILE:
+        /* FIXME: no need to export anything */
         break;
       default:
         log_text(LOG_WARNING, "Global option '%s' will not be exported, because"

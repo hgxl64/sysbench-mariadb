@@ -1,4 +1,5 @@
 /* Copyright (C) 2005 MySQL AB
+   Copyright (C) 2005-20015 Alexey Kopytov <akopytov@gmail.com>
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -12,7 +13,7 @@
 
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 */
 
 #ifdef HAVE_CONFIG_H
@@ -90,8 +91,6 @@ static drv_caps_t pgsql_drv_caps =
   0,    /* needs_commit */
   1,    /* serial */
   0,    /* unsigned int */
-  
-  NULL  /* table_options_str */
 };
 
 /* Describes the PostgreSQL prepared statement */
@@ -465,6 +464,34 @@ int pgsql_drv_bind_result(db_stmt_t *stmt, db_bind_t *params, unsigned int len)
 }
 
 
+/* Check query execution status */
+
+
+static int pgsql_check_status(PGconn *pgcon, PGresult *pgres,
+                              const char *funcname)
+{
+  ExecStatusType status;
+
+  status = PQresultStatus(pgres);
+  if (status != PGRES_TUPLES_OK && status != PGRES_COMMAND_OK)
+  {
+    const char * const errmsg = PQerrorMessage(pgcon);
+
+    if (strstr(errmsg, "deadlock detected") ||
+        strstr(errmsg, "duplicate key value violates unique constraint"))
+    {
+      PQexec(pgcon, "ROLLBACK");
+      return SB_DB_ERROR_RESTART_TRANSACTION;
+    }
+
+    log_text(LOG_FATAL, "%s() failed: %d %s", funcname, status, errmsg);
+    return SB_DB_ERROR_FAILED;
+  }
+
+  return SB_DB_ERROR_NONE;
+}
+
+
 /* Execute prepared statement */
 
 
@@ -473,14 +500,14 @@ int pgsql_drv_execute(db_stmt_t *stmt, db_result_set_t *rs)
   db_conn_t       *con = stmt->connection;
   PGconn          *pgcon = (PGconn *)con->ptr;
   PGresult        *pgres;
-  ExecStatusType  status;
   pg_stmt_t       *pgstmt;
   char            *buf = NULL;
   unsigned int    buflen = 0;
   unsigned int    i, j, vcnt;
   char            need_realloc;
   int             n;
- 
+  int             rc;
+
   if (!stmt->emulated)
   {
     pgstmt = stmt->ptr;
@@ -508,16 +535,13 @@ int pgsql_drv_execute(db_stmt_t *stmt, db_result_set_t *rs)
 
     pgres = PQexecPrepared(pgcon, pgstmt->name, pgstmt->nparams,
                            (const char **)pgstmt->pvalues, NULL, NULL, 1);
-    status = PQresultStatus(pgres);
-    if (status != PGRES_TUPLES_OK && status != PGRES_COMMAND_OK)
-    {
-      log_text(LOG_FATAL, "query execution failed: %d", PQerrorMessage(pgcon));
-      log_text(LOG_DEBUG, "status = %d", status);
-      return SB_DB_ERROR_FAILED;
-    }
-    rs->ptr = (void *)pgres;
-    
-    return SB_DB_ERROR_NONE;
+
+    rc = pgsql_check_status(pgcon, pgres, "PQexecPrepared");
+
+    if (rc == SB_DB_ERROR_NONE)
+      rs->ptr = (void *)pgres;
+
+    return rc;
   }
 
   /* Use emulation */
@@ -572,22 +596,19 @@ int pgsql_drv_query(db_conn_t *sb_conn, const char *query,
 {
   PGconn         *con = sb_conn->ptr;
   PGresult       *pgres;
-  ExecStatusType status;
+  int            rc;
 
   (void)rs; /* unused */
 
   pgres = PQexec(con, query);
-  status = PQresultStatus(pgres);
-  if (status != PGRES_TUPLES_OK && status != PGRES_COMMAND_OK)
-  {
-    log_text(LOG_ALERT, "failed to execute PgSQL query: `%s`:", query);
-    log_text(LOG_ALERT, "error: %s", PQerrorMessage(con));
-    return SB_DB_ERROR_FAILED;
-  }
+  rc = pgsql_check_status(con, pgres, "PQexec");
 
-  rs->ptr = pgres;
-  
-  return SB_DB_ERROR_NONE;
+  if (rc == SB_DB_ERROR_NONE)
+    rs->ptr = pgres;
+  else if (rc == SB_DB_ERROR_FAILED)
+    log_text(LOG_FATAL, "failed query: %s", query);
+
+  return rc;
 }
 
 
