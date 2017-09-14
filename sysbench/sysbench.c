@@ -79,7 +79,7 @@
 #define MAX_QUEUE_LEN 100000
 
 /* Wait at most this number of seconds for worker threads to initialize */
-#define THREAD_INIT_TIMEOUT 30
+#define THREAD_INIT_TIMEOUT 300
 
 /* Random numbers distributions */
 typedef enum
