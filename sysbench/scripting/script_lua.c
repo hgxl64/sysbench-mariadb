@@ -620,11 +620,11 @@ int sb_lua_db_query(lua_State *L)
     lua_pushnumber(L, ctxt->con->db_errno);
     lua_error(L);
   }
-
   db_store_results(rs);
+  lua_pushnumber(L, rs->nrows);
   db_free_results(rs);
   
-  return 0;
+  return 1;
 }
 
 int sb_lua_db_bulk_insert_init(lua_State *L)
